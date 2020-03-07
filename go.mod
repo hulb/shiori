@@ -1,4 +1,4 @@
-module github.com/go-shiori/shiori
+module github.com/hulb/shiori
 
 go 1.12
 
@@ -13,12 +13,11 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/lib/pq v1.1.1
-	github.com/mattn/go-colorable v0.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.7 // indirect
+	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/muesli/go-app-paths v0.0.0-20181030220709-913f7f7ac60f
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/shurcooL/httpfs v0.0.0-20181222201310-74dc9339e414 // indirect
+	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5

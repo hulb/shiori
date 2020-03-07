@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/go-shiori/shiori/internal/core"
-	"github.com/go-shiori/shiori/internal/database"
-	"github.com/go-shiori/shiori/internal/model"
+	"github.com/hulb/shiori/internal/core"
+	"github.com/hulb/shiori/internal/database"
+	"github.com/hulb/shiori/internal/model"
 	"github.com/spf13/cobra"
 )
 
