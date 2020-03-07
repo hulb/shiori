@@ -1,7 +1,7 @@
 FROM golang:1.13-alpine as builder
 
 RUN apk update && apk --no-cache add git build-base
-RUN go get -u -v github.com/go-shiori/shiori
+RUN go get -u -v github.com/hulb/shiori
 
 # ========== END OF BUILDER ========== #
 
