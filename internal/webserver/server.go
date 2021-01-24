@@ -54,6 +54,9 @@ func ServeApp(cfg Config) error {
 		return path.Join(cfg.RootPath, route)
 	}
 
+	router.GET(jp("/pwabuilder-sw.js"), hdl.serveFile)
+	router.GET(jp("/manifest.json"), hdl.serveFile)
+	
 	router.GET(jp("/js/*filepath"), hdl.serveJsFile)
 	router.GET(jp("/res/*filepath"), hdl.serveFile)
 	router.GET(jp("/css/*filepath"), hdl.serveFile)
