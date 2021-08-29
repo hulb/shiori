@@ -13,10 +13,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/hulb/shiori/internal/core"
 	"github.com/hulb/shiori/internal/database"
 	"github.com/hulb/shiori/internal/model"
-	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -260,6 +260,7 @@ func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps h
 			Bookmark:    book,
 			Content:     content,
 			ContentType: contentType,
+			KeepTitle:   book.Title != "",
 		}
 
 		book, isFatalErr, err = core.ProcessBookmark(request)
