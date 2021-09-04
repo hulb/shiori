@@ -1,8 +1,10 @@
 package webserver
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"os"
@@ -228,6 +230,57 @@ func (h *handler) apiRenameTag(w http.ResponseWriter, r *http.Request, ps httpro
 	fmt.Fprint(w, 1)
 }
 
+func (h *handler) processBookmark(book model.Bookmark) (model.Bookmark, error) {
+	var (
+		err           error
+		contentType   string
+		contentBuffer io.Reader
+	)
+
+	if book.HTML == "" {
+		contentBuffer, contentType, err = core.DownloadBookmark(book.URL)
+		if err != nil {
+			return book, fmt.Errorf("failed to download bookmark: %v", err)
+		}
+	} else {
+		contentType = "text/html; charset=UTF-8"
+		contentBuffer = bytes.NewBufferString(book.HTML)
+	}
+
+	// Fetch data from internet
+	var isFatalErr bool
+	request := core.ProcessRequest{
+		DataDir:     h.DataDir,
+		Bookmark:    book,
+		Content:     contentBuffer,
+		ContentType: contentType,
+		KeepTitle:   book.Title != "",
+	}
+
+	book, isFatalErr, err = core.ProcessBookmark(request)
+	if tmp, ok := contentBuffer.(io.Closer); ok {
+		tmp.Close()
+	}
+
+	if err != nil && isFatalErr {
+		return book, fmt.Errorf("failed to process bookmark: %v", err)
+	}
+
+	// Make sure bookmark's title not empty
+	if book.Title == "" {
+		book.Title = book.URL
+	}
+
+	// Save bookmark to database
+	results, err := h.DB.SaveBookmarks(book)
+	if err != nil || len(results) == 0 {
+		return book, fmt.Errorf("failed to save bookmark: %v", err)
+	}
+	book = results[0]
+
+	return book, nil
+}
+
 // apiInsertBookmark is handler for POST /api/bookmark
 func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Make sure session still valid
@@ -243,37 +296,6 @@ func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps h
 	book.ID, err = h.DB.CreateNewID("bookmark")
 	if err != nil {
 		panic(fmt.Errorf("failed to create ID: %v", err))
-	}
-
-	// Clean up bookmark URL
-	book.URL, err = core.RemoveUTMParams(book.URL)
-	if err != nil {
-		panic(fmt.Errorf("failed to clean URL: %v", err))
-	}
-
-	// Fetch data from internet
-	var isFatalErr bool
-	content, contentType, err := core.DownloadBookmark(book.URL)
-	if err == nil && content != nil {
-		request := core.ProcessRequest{
-			DataDir:     h.DataDir,
-			Bookmark:    book,
-			Content:     content,
-			ContentType: contentType,
-			KeepTitle:   book.Title != "",
-		}
-
-		book, isFatalErr, err = core.ProcessBookmark(request)
-		content.Close()
-
-		if err != nil && isFatalErr {
-			panic(fmt.Errorf("failed to process bookmark: %v", err))
-		}
-	}
-
-	// Make sure bookmark's title not empty
-	if book.Title == "" {
-		book.Title = book.URL
 	}
 
 	// Save bookmark to database

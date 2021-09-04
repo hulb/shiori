@@ -21,6 +21,7 @@ type Bookmark struct {
 	HTML          string `db:"html"          json:"html,omitempty"`
 	ImageURL      string `db:"image_url"     json:"imageURL"`
 	HasContent    bool   `db:"has_content"   json:"hasContent"`
+	Processed     bool   `db:"processed" json:"processed"`
 	HasArchive    bool   `json:"hasArchive"`
 	Tags          []Tag  `json:"tags"`
 	CreateArchive bool   `json:"createArchive"`

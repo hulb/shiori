@@ -1,9 +1,13 @@
 package webserver
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"path"
+	"syscall"
 	"time"
 
 	"github.com/hulb/shiori/internal/database"
@@ -92,7 +96,26 @@ func ServeApp(cfg Config) error {
 		WriteTimeout: time.Minute,
 	}
 
-	// Serve app
-	logrus.Infoln("Serve shiori in", url)
-	return svr.ListenAndServe()
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	signal.Notify(stop, syscall.SIGTERM)
+
+	go func() {
+		// Serve app
+		logrus.Infoln("Serve shiori in", url)
+		err := svr.ListenAndServe()
+		if err != nil {
+			logrus.Errorln("Serve fail:", err.Error())
+			stop <- os.Interrupt
+		}
+	}()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		hdl.startProcessWorker(ctx)
+	}()
+
+	<-stop
+	cancel()
+	return nil
 }

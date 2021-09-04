@@ -28,6 +28,7 @@ type GetBookmarksOptions struct {
 	OrderMethod  OrderMethod
 	Limit        int
 	Offset       int
+	UnProcessed  bool
 }
 
 // GetAccountsOptions is options for fetching accounts from database.
