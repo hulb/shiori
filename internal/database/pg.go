@@ -77,6 +77,7 @@ func OpenPGDatabase(connString string) (pgDB *PGDatabase, err error) {
 	// Create indices
 	tx.MustExec(`CREATE INDEX IF NOT EXISTS bookmark_tag_bookmark_id_FK ON bookmark_tag (bookmark_id)`)
 	tx.MustExec(`CREATE INDEX IF NOT EXISTS bookmark_tag_tag_id_FK ON bookmark_tag (tag_id)`)
+	tx.MustExec(`ALTER TABLE bookmark ADD COLUMN IF NOT EXISTS processed BOOLEAN NOT NULL DEFAULT false`)
 
 	err = tx.Commit()
 	checkError(err)
@@ -117,7 +118,9 @@ func (db *PGDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []model
 		public   = $5,
 		content  = $6,
 		html     = $7,
-		modified = $8`)
+		modified = $8,
+		processed = $9
+		`)
 	checkError(err)
 
 	stmtGetTag, err := tx.Preparex(`SELECT id FROM tag WHERE name = $1`)
@@ -149,17 +152,13 @@ func (db *PGDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []model
 			panic(fmt.Errorf("URL must not be empty"))
 		}
 
-		if book.Title == "" {
-			panic(fmt.Errorf("title must not be empty"))
-		}
-
 		// Set modified time
 		book.Modified = modifiedTime
 
 		// Save bookmark
 		stmtInsertBook.MustExec(
 			book.URL, book.Title, book.Excerpt, book.Author,
-			book.Public, book.Content, book.HTML, book.Modified)
+			book.Public, book.Content, book.HTML, book.Modified, book.Processed)
 
 		// Save book tags
 		newTags := []model.Tag{}
@@ -216,6 +215,7 @@ func (db *PGDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookmark, 
 		`author`,
 		`public`,
 		`modified`,
+		`processed`,
 		`content <> '' has_content`}
 
 	if opts.WithContent {
@@ -296,6 +296,10 @@ func (db *PGDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookmark, 
 			WHERE t.name IN(:extags))`
 
 		arg["extags"] = opts.ExcludedTags
+	}
+
+	if opts.UnProcessed {
+		query += ` AND processed = false`
 	}
 
 	// Add order clause

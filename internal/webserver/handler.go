@@ -1,14 +1,17 @@
 package webserver
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 
+	"github.com/go-shiori/warc"
 	"github.com/hulb/shiori/internal/database"
 	"github.com/hulb/shiori/internal/model"
-	"github.com/go-shiori/warc"
 	cch "github.com/patrickmn/go-cache"
+	"github.com/sirupsen/logrus"
 )
 
 var developmentMode = false
@@ -131,4 +134,36 @@ func (h *handler) validateSession(r *http.Request) error {
 	}
 
 	return nil
+}
+
+func (h *handler) startProcessWorker(ctx context.Context) {
+	for {
+		tick := time.NewTicker(time.Second * 5)
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
+			searchOptions := database.GetBookmarksOptions{
+				OrderMethod: database.DefaultOrder,
+				UnProcessed: true,
+			}
+			unprocessedMarks, err := h.DB.GetBookmarks(searchOptions)
+			if err != nil {
+				logrus.Error("failed to fetch tasks from db: ", err.Error())
+			}
+
+			for _, mark := range unprocessedMarks {
+				mark, err = h.processBookmark(mark)
+				if err != nil {
+					logrus.Errorf("failed to process task: %v", err)
+				}
+
+				mark.Processed = true
+				_, err = h.DB.SaveBookmarks(mark)
+				if err != nil {
+					logrus.Errorf("failed to save task: %v", err)
+				}
+			}
+		}
+	}
 }

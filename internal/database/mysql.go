@@ -82,6 +82,8 @@ func OpenMySQLDatabase(connString string) (mysqlDB *MySQLDatabase, err error) {
 		CONSTRAINT bookmark_tag_tag_id_FK FOREIGN KEY (tag_id) REFERENCES tag (id))
 		CHARACTER SET utf8mb4`)
 
+	tx.Exec(`ALTER TABLE bookmark ADD COLUMN processed BOOLEAN NOT NULL DEFAULT 0`)
+
 	err = tx.Commit()
 	checkError(err)
 
@@ -121,7 +123,9 @@ func (db *MySQLDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []mo
 		public   = VALUES(public),
 		content  = VALUES(content),
 		html     = VALUES(html),
-		modified = VALUES(modified)`)
+		modified = VALUES(modified),
+		processed = VALUES(processed)
+		`)
 	checkError(err)
 
 	stmtGetTag, err := tx.Preparex(`SELECT id FROM tag WHERE name = ?`)
@@ -153,17 +157,13 @@ func (db *MySQLDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []mo
 			panic(fmt.Errorf("URL must not be empty"))
 		}
 
-		if book.Title == "" {
-			panic(fmt.Errorf("title must not be empty"))
-		}
-
 		// Set modified time
 		book.Modified = modifiedTime
 
 		// Save bookmark
 		stmtInsertBook.MustExec(book.ID,
 			book.URL, book.Title, book.Excerpt, book.Author,
-			book.Public, book.Content, book.HTML, book.Modified)
+			book.Public, book.Content, book.HTML, book.Modified, book.Processed)
 
 		// Save book tags
 		newTags := []model.Tag{}
@@ -220,6 +220,7 @@ func (db *MySQLDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookmar
 		`author`,
 		`public`,
 		`modified`,
+		`processed`,
 		`content <> "" has_content`}
 
 	if opts.WithContent {
@@ -298,6 +299,10 @@ func (db *MySQLDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookmar
 			WHERE t.name IN(?))`
 
 		args = append(args, opts.ExcludedTags)
+	}
+
+	if opts.UnProcessed {
+		query += ` AND processed = false`
 	}
 
 	// Add order clause

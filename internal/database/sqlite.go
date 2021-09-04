@@ -76,6 +76,7 @@ func OpenSQLiteDatabase(databasePath string) (sqliteDB *SQLiteDatabase, err erro
 	// Alter table if needed
 	tx.Exec(`ALTER TABLE account ADD COLUMN owner INTEGER NOT NULL DEFAULT 0`)
 	tx.Exec(`ALTER TABLE bookmark ADD COLUMN public INTEGER NOT NULL DEFAULT 0`)
+	tx.Exec(`ALTER TABLE bookmark ADD COLUMN processed INTEGER NOT NULL DEFAULT 0`)
 
 	err = tx.Commit()
 	checkError(err)
@@ -110,7 +111,7 @@ func (db *SQLiteDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []m
 		VALUES(?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 		url = ?, title = ?,	excerpt = ?, author = ?, 
-		public = ?, modified = ?`)
+		public = ?, modified = ?, processed = ?`)
 
 	stmtInsertBookContent, _ := tx.Preparex(`INSERT OR IGNORE INTO bookmark_content
 		(docid, title, content, html) 
@@ -145,17 +146,13 @@ func (db *SQLiteDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []m
 			panic(fmt.Errorf("URL must not be empty"))
 		}
 
-		if book.Title == "" {
-			panic(fmt.Errorf("title must not be empty"))
-		}
-
 		// Set modified time
 		book.Modified = modifiedTime
 
 		// Save bookmark
 		stmtInsertBook.MustExec(book.ID,
 			book.URL, book.Title, book.Excerpt, book.Author, book.Public, book.Modified,
-			book.URL, book.Title, book.Excerpt, book.Author, book.Public, book.Modified)
+			book.URL, book.Title, book.Excerpt, book.Author, book.Public, book.Modified, book.Processed)
 
 		stmtUpdateBookContent.MustExec(book.Title, book.Content, book.HTML, book.ID)
 		stmtInsertBookContent.MustExec(book.ID, book.Title, book.Content, book.HTML)
@@ -215,6 +212,7 @@ func (db *SQLiteDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookma
 		`b.author`,
 		`b.public`,
 		`b.modified`,
+		`b.processed`,
 		`bc.content <> "" has_content`}
 
 	if opts.WithContent {
@@ -299,6 +297,10 @@ func (db *SQLiteDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookma
 			WHERE t.name IN(?))`
 
 		args = append(args, opts.ExcludedTags)
+	}
+
+	if opts.UnProcessed {
+		query += ` AND processed = false`
 	}
 
 	// Add order clause
