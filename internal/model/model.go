@@ -22,9 +22,9 @@ type Bookmark struct {
 	ImageURL      string `db:"image_url"     json:"imageURL"`
 	HasContent    bool   `db:"has_content"   json:"hasContent"`
 	Processed     bool   `db:"processed" json:"processed"`
+	CreateArchive bool   `db:"create_archive" json:"createArchive"`
 	HasArchive    bool   `json:"hasArchive"`
 	Tags          []Tag  `json:"tags"`
-	CreateArchive bool   `json:"createArchive"`
 }
 
 // Account is person that allowed to access web interface.

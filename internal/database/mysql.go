@@ -83,6 +83,7 @@ func OpenMySQLDatabase(connString string) (mysqlDB *MySQLDatabase, err error) {
 		CHARACTER SET utf8mb4`)
 
 	tx.Exec(`ALTER TABLE bookmark ADD COLUMN processed BOOLEAN NOT NULL DEFAULT 0`)
+	tx.Exec(`ALTER TABLE bookmark ADD COLUMN create_archive BOOLEAN NOT NULL DEFAULT 0`)
 
 	err = tx.Commit()
 	checkError(err)
@@ -124,6 +125,7 @@ func (db *MySQLDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []mo
 		content  = VALUES(content),
 		html     = VALUES(html),
 		modified = VALUES(modified),
+		create_archive = VALUES(create_archive),
 		processed = VALUES(processed)
 		`)
 	checkError(err)
@@ -163,7 +165,7 @@ func (db *MySQLDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []mo
 		// Save bookmark
 		stmtInsertBook.MustExec(book.ID,
 			book.URL, book.Title, book.Excerpt, book.Author,
-			book.Public, book.Content, book.HTML, book.Modified, book.Processed)
+			book.Public, book.Content, book.HTML, book.Modified, book.CreateArchive, book.Processed)
 
 		// Save book tags
 		newTags := []model.Tag{}
@@ -220,6 +222,7 @@ func (db *MySQLDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookmar
 		`author`,
 		`public`,
 		`modified`,
+		`create_archive`,
 		`processed`,
 		`content <> "" has_content`}
 

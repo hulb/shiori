@@ -78,6 +78,7 @@ func OpenPGDatabase(connString string) (pgDB *PGDatabase, err error) {
 	tx.MustExec(`CREATE INDEX IF NOT EXISTS bookmark_tag_bookmark_id_FK ON bookmark_tag (bookmark_id)`)
 	tx.MustExec(`CREATE INDEX IF NOT EXISTS bookmark_tag_tag_id_FK ON bookmark_tag (tag_id)`)
 	tx.MustExec(`ALTER TABLE bookmark ADD COLUMN IF NOT EXISTS processed BOOLEAN NOT NULL DEFAULT false`)
+	tx.MustExec(`ALTER TABLE bookmark ADD COLUMN IF NOT EXISTS create_archive BOOLEAN NOT NULL DEFAULT false`)
 
 	err = tx.Commit()
 	checkError(err)
@@ -108,8 +109,8 @@ func (db *PGDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []model
 
 	// Prepare statement
 	stmtInsertBook, err := tx.Preparex(`INSERT INTO bookmark
-		(url, title, excerpt, author, public, content, html, modified)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+		(url, title, excerpt, author, public, content, html, modified, create_archive, processed)
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT(url) DO UPDATE SET
 		url      = $1,
 		title    = $2,
@@ -119,7 +120,8 @@ func (db *PGDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []model
 		content  = $6,
 		html     = $7,
 		modified = $8,
-		processed = $9
+		create_archive = $9,
+		processed = $10
 		`)
 	checkError(err)
 
@@ -158,7 +160,7 @@ func (db *PGDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []model
 		// Save bookmark
 		stmtInsertBook.MustExec(
 			book.URL, book.Title, book.Excerpt, book.Author,
-			book.Public, book.Content, book.HTML, book.Modified, book.Processed)
+			book.Public, book.Content, book.HTML, book.Modified, book.CreateArchive, book.Processed)
 
 		// Save book tags
 		newTags := []model.Tag{}
@@ -215,6 +217,7 @@ func (db *PGDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookmark, 
 		`author`,
 		`public`,
 		`modified`,
+		`create_archive`,
 		`processed`,
 		`content <> '' has_content`}
 

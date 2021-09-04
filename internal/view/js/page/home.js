@@ -218,6 +218,14 @@ export default {
 					// Set data
 					this.page = json.page;
 					this.maxPage = json.maxPage;
+
+					for (let i = 0; i < json.bookmarks.length; i++) {
+						if (json.bookmarks[i].processed == true) {
+							continue
+						}
+						json.bookmarks[i].title = "[Unprocessed]" + json.bookmarks[i].title;
+					}
+
 					this.bookmarks = json.bookmarks;
 
 					// Save state and change URL if needed
