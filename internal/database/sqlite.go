@@ -77,6 +77,7 @@ func OpenSQLiteDatabase(databasePath string) (sqliteDB *SQLiteDatabase, err erro
 	tx.Exec(`ALTER TABLE account ADD COLUMN owner INTEGER NOT NULL DEFAULT 0`)
 	tx.Exec(`ALTER TABLE bookmark ADD COLUMN public INTEGER NOT NULL DEFAULT 0`)
 	tx.Exec(`ALTER TABLE bookmark ADD COLUMN processed INTEGER NOT NULL DEFAULT 0`)
+	tx.Exec(`ALTER TABLE bookmark ADD COLUMN create_archive INTEGER NOT NULL DEFAULT 0`)
 
 	err = tx.Commit()
 	checkError(err)
@@ -107,11 +108,11 @@ func (db *SQLiteDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []m
 
 	// Prepare statement
 	stmtInsertBook, _ := tx.Preparex(`INSERT INTO bookmark
-		(id, url, title, excerpt, author, public, modified)
-		VALUES(?, ?, ?, ?, ?, ?, ?)
+		(id, url, title, excerpt, author, public, modified, create_archive, processed)
+		VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 		url = ?, title = ?,	excerpt = ?, author = ?, 
-		public = ?, modified = ?, processed = ?`)
+		public = ?, modified = ?, create_archive = ?, processed = ?`)
 
 	stmtInsertBookContent, _ := tx.Preparex(`INSERT OR IGNORE INTO bookmark_content
 		(docid, title, content, html) 
@@ -151,8 +152,8 @@ func (db *SQLiteDatabase) SaveBookmarks(bookmarks ...model.Bookmark) (result []m
 
 		// Save bookmark
 		stmtInsertBook.MustExec(book.ID,
-			book.URL, book.Title, book.Excerpt, book.Author, book.Public, book.Modified,
-			book.URL, book.Title, book.Excerpt, book.Author, book.Public, book.Modified, book.Processed)
+			book.URL, book.Title, book.Excerpt, book.Author, book.Public, book.Modified, book.CreateArchive, book.Processed,
+			book.URL, book.Title, book.Excerpt, book.Author, book.Public, book.Modified, book.CreateArchive, book.Processed)
 
 		stmtUpdateBookContent.MustExec(book.Title, book.Content, book.HTML, book.ID)
 		stmtInsertBookContent.MustExec(book.ID, book.Title, book.Content, book.HTML)
@@ -212,6 +213,7 @@ func (db *SQLiteDatabase) GetBookmarks(opts GetBookmarksOptions) ([]model.Bookma
 		`b.author`,
 		`b.public`,
 		`b.modified`,
+		`b.create_archive`,
 		`b.processed`,
 		`bc.content <> "" has_content`}
 
