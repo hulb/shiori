@@ -24,6 +24,8 @@ func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request, 
 	err = json.NewDecoder(r.Body).Decode(&request)
 	checkError(err)
 
+	request.CreateArchive = true
+
 	// Clean up bookmark URL
 	request.URL, err = core.RemoveUTMParams(request.URL)
 	if err != nil {
