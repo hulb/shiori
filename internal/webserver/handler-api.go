@@ -305,6 +305,8 @@ func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps h
 	}
 	book = results[0]
 
+	h.Add2Queue(book.ID)
+
 	// Return the new bookmark
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(&book)

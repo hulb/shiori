@@ -29,12 +29,13 @@ type Config struct {
 func ServeApp(cfg Config) error {
 	// Create handler
 	hdl := handler{
-		DB:           cfg.DB,
-		DataDir:      cfg.DataDir,
-		UserCache:    cch.New(time.Hour, 10*time.Minute),
-		SessionCache: cch.New(time.Hour, 10*time.Minute),
-		ArchiveCache: cch.New(time.Minute, 5*time.Minute),
-		RootPath:     cfg.RootPath,
+		DB:             cfg.DB,
+		DataDir:        cfg.DataDir,
+		UserCache:      cch.New(time.Hour, 10*time.Minute),
+		SessionCache:   cch.New(time.Hour, 10*time.Minute),
+		ArchiveCache:   cch.New(time.Minute, 5*time.Minute),
+		RootPath:       cfg.RootPath,
+		unprocessQueue: make(chan int, 64),
 	}
 
 	hdl.prepareSessionCache()

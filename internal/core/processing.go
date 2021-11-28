@@ -9,6 +9,7 @@ import (
 	"image/jpeg"
 	"io"
 	"math"
+	"net/url"
 	"os"
 	"path"
 	fp "path/filepath"
@@ -19,6 +20,7 @@ import (
 	"github.com/go-shiori/go-readability"
 	"github.com/go-shiori/warc"
 	"github.com/hulb/shiori/internal/model"
+	"github.com/sirupsen/logrus"
 
 	// Add support for png
 	_ "image/png"
@@ -66,9 +68,15 @@ func ProcessBookmark(req ProcessRequest) (model.Bookmark, bool, error) {
 	// If this is HTML, parse for readable content
 	var imageURLs []string
 	if strings.Contains(contentType, "text/html") {
-		isReadable := readability.IsReadable(readabilityCheckInput)
+		isReadable := readability.Check(readabilityCheckInput)
 
-		article, err := readability.FromReader(readabilityInput, book.URL)
+		bookURL, err := url.Parse(book.URL)
+		if err != nil {
+			logrus.Warnf("parse book url fail, url: %s", book.URL)
+			bookURL = nil
+		}
+
+		article, err := readability.FromReader(readabilityInput, bookURL)
 		if err != nil {
 			return book, false, fmt.Errorf("failed to parse article: %v", err)
 		}

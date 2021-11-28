@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"time"
 
 	"github.com/go-shiori/warc"
 	"github.com/hulb/shiori/internal/database"
@@ -18,12 +17,13 @@ var developmentMode = false
 
 // Handler is handler for serving the web interface.
 type handler struct {
-	DB           database.DB
-	DataDir      string
-	RootPath     string
-	UserCache    *cch.Cache
-	SessionCache *cch.Cache
-	ArchiveCache *cch.Cache
+	DB             database.DB
+	DataDir        string
+	RootPath       string
+	UserCache      *cch.Cache
+	SessionCache   *cch.Cache
+	ArchiveCache   *cch.Cache
+	unprocessQueue chan int
 
 	templates map[string]*template.Template
 }
@@ -137,33 +137,35 @@ func (h *handler) validateSession(r *http.Request) error {
 }
 
 func (h *handler) startProcessWorker(ctx context.Context) {
-	for {
-		tick := time.NewTicker(time.Second * 5)
-		select {
-		case <-ctx.Done():
-			return
-		case <-tick.C:
-			searchOptions := database.GetBookmarksOptions{
-				OrderMethod: database.DefaultOrder,
-				UnProcessed: true,
-			}
-			unprocessedMarks, err := h.DB.GetBookmarks(searchOptions)
+	for id := range h.unprocessQueue {
+		searchOptions := database.GetBookmarksOptions{
+			OrderMethod: database.DefaultOrder,
+			UnProcessed: true,
+			IDs:         []int{id},
+		}
+
+		unprocessedMarks, err := h.DB.GetBookmarks(searchOptions)
+		if err != nil {
+			logrus.Error("failed to fetch tasks from db: ", err.Error())
+		}
+
+		for _, mark := range unprocessedMarks {
+			mark, err = h.processBookmark(mark)
 			if err != nil {
-				logrus.Error("failed to fetch tasks from db: ", err.Error())
+				logrus.Errorf("failed to process task: %v", err)
 			}
 
-			for _, mark := range unprocessedMarks {
-				mark, err = h.processBookmark(mark)
-				if err != nil {
-					logrus.Errorf("failed to process task: %v", err)
-				}
-
-				mark.Processed = true
-				_, err = h.DB.SaveBookmarks(mark)
-				if err != nil {
-					logrus.Errorf("failed to save task: %v", err)
-				}
+			mark.Processed = true
+			_, err = h.DB.SaveBookmarks(mark)
+			if err != nil {
+				logrus.Errorf("failed to save task: %v", err)
 			}
 		}
 	}
+}
+
+func (h *handler) Add2Queue(id int) {
+	go func() {
+		h.unprocessQueue <- id
+	}()
 }
