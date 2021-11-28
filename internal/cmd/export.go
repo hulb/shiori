@@ -37,7 +37,10 @@ func exportHandler(cmd *cobra.Command, args []string) {
 
 	// Make sure destination directory exist
 	dstDir := fp.Dir(args[0])
-	os.MkdirAll(dstDir, os.ModePerm)
+	if err := os.MkdirAll(dstDir, os.ModePerm); err != nil {
+		cError.Printf("Failed to create destination path: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Create destination file
 	dstFile, err := os.Create(args[0])

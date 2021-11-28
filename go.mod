@@ -20,6 +20,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 )
 
 require (
@@ -38,7 +39,6 @@ require (
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
 )
