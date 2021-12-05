@@ -3,7 +3,7 @@ FROM golang:alpine AS builder
 RUN apk add --no-cache build-base
 WORKDIR /src
 COPY . .
-RUN go build
+RUN go build -ldflags "-s -w"
 
 # server image
 FROM alpine:latest
