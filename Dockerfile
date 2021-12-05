@@ -6,7 +6,7 @@ COPY . .
 RUN go build
 
 # server image
-FROM golang:alpine
+FROM alpine:latest
 COPY --from=builder /src/shiori /usr/local/bin/
 ENV SHIORI_DIR /srv/shiori/
 EXPOSE 8080
