@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -8,6 +9,8 @@ import (
 
 	"github.com/shurcooL/vfsgen"
 )
+
+//go:generate go run assets-generator.go
 
 func main() {
 	err := vfsgen.Generate(http.Dir("internal/view"), vfsgen.Options{
