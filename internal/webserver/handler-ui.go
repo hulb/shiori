@@ -13,13 +13,13 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/hulb/shiori/internal/model"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-shiori/warc"
-	"github.com/julienschmidt/httprouter"
+	"github.com/hulb/shiori/internal/model"
 )
 
 // serveFile is handler for general file request
-func (h *handler) serveFile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) serveFile(w http.ResponseWriter, r *http.Request) {
 	rootPath := strings.Trim(h.RootPath, "/")
 	urlPath := strings.Trim(r.URL.Path, "/")
 	filePath := strings.TrimPrefix(urlPath, rootPath)
@@ -29,8 +29,8 @@ func (h *handler) serveFile(w http.ResponseWriter, r *http.Request, ps httproute
 }
 
 // serveJsFile is handler for GET /js/*filepath
-func (h *handler) serveJsFile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	jsFilePath := ps.ByName("filepath")
+func (h *handler) serveJsFile(w http.ResponseWriter, r *http.Request) {
+	jsFilePath := chi.URLParam(r, "filePath")
 	jsFilePath = path.Join("js", jsFilePath)
 	jsDir, jsName := path.Split(jsFilePath)
 
@@ -47,46 +47,29 @@ func (h *handler) serveJsFile(w http.ResponseWriter, r *http.Request, ps httprou
 }
 
 // serveIndexPage is handler for GET /
-func (h *handler) serveIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// Make sure session still valid
-	err := h.validateSession(r)
-	if err != nil {
-		newPath := path.Join(h.RootPath, "/login")
-		redirectURL := createRedirectURL(newPath, r.URL.String())
-		redirectPage(w, r, redirectURL)
-		return
-	}
-
+func (h *handler) serveIndexPage(w http.ResponseWriter, r *http.Request) {
 	if developmentMode {
 		h.prepareTemplates()
 	}
 
-	err = h.templates["index"].Execute(w, h.RootPath)
+	err := h.templates["index"].Execute(w, h.RootPath)
 	checkError(err)
 }
 
 // serveLoginPage is handler for GET /login
-func (h *handler) serveLoginPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// Make sure session is not valid
-	err := h.validateSession(r)
-	if err == nil {
-		redirectURL := path.Join(h.RootPath, "/")
-		redirectPage(w, r, redirectURL)
-		return
-	}
-
+func (h *handler) serveLoginPage(w http.ResponseWriter, r *http.Request) {
 	if developmentMode {
 		h.prepareTemplates()
 	}
 
-	err = h.templates["login"].Execute(w, h.RootPath)
+	err := h.templates["login"].Execute(w, h.RootPath)
 	checkError(err)
 }
 
 // serveBookmarkContent is handler for GET /bookmark/:id/content
-func (h *handler) serveBookmarkContent(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) serveBookmarkContent(w http.ResponseWriter, r *http.Request) {
 	// Get bookmark ID from URL
-	strID := ps.ByName("id")
+	strID := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(strID)
 	checkError(err)
 
@@ -190,9 +173,9 @@ func (h *handler) serveBookmarkContent(w http.ResponseWriter, r *http.Request, p
 }
 
 // serveThumbnailImage is handler for GET /bookmark/:id/thumb
-func (h *handler) serveThumbnailImage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) serveThumbnailImage(w http.ResponseWriter, r *http.Request) {
 	// Get bookmark ID from URL
-	id := ps.ByName("id")
+	id := chi.URLParam(r, "id")
 
 	// Open image
 	imgPath := fp.Join(h.DataDir, "thumb", id)
@@ -223,10 +206,10 @@ func (h *handler) serveThumbnailImage(w http.ResponseWriter, r *http.Request, ps
 }
 
 // serveBookmarkArchive is handler for GET /bookmark/:id/archive/*filepath
-func (h *handler) serveBookmarkArchive(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) serveBookmarkArchive(w http.ResponseWriter, r *http.Request) {
 	// Get parameter from URL
-	strID := ps.ByName("id")
-	resourcePath := ps.ByName("filepath")
+	strID := chi.URLParam(r, "id")
+	resourcePath := chi.URLParam(r, "filePath")
 	resourcePath = strings.TrimPrefix(resourcePath, "/")
 
 	// Get bookmark from database

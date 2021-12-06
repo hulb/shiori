@@ -10,8 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/hulb/shiori/internal/database"
-	"github.com/julienschmidt/httprouter"
 	cch "github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
 )
@@ -47,55 +48,66 @@ func ServeApp(cfg Config) error {
 	}
 
 	// Create router
-	router := httprouter.New()
+	r := chi.NewRouter()
+	r.Use(middleware.Logger, middleware.Recoverer)
 
 	// jp here means "join path", as in "join route with root path"
 	jp := func(route string) string {
 		return path.Join(cfg.RootPath, route)
 	}
 
-	router.GET(jp("/pwabuilder-sw.js"), hdl.serveFile)
-	router.GET(jp("/manifest.json"), hdl.serveFile)
-	
-	router.GET(jp("/js/*filepath"), hdl.serveJsFile)
-	router.GET(jp("/res/*filepath"), hdl.serveFile)
-	router.GET(jp("/css/*filepath"), hdl.serveFile)
-	router.GET(jp("/fonts/*filepath"), hdl.serveFile)
+	r.Group(func(r chi.Router) {
+		r.Get(jp("/pwabuilder-sw.js"), hdl.serveFile)
+		r.Get(jp("/manifest.json"), hdl.serveFile)
+		r.Get(jp("/js/{filePath}"), hdl.serveJsFile)
+		r.Get(jp("/res/{filePath}"), hdl.serveFile)
+		r.Get(jp("/css/{filePath}"), hdl.serveFile)
+		r.Get(jp("/fonts/{filePath}"), hdl.serveFile)
+		r.Get(jp("/pwabuilder-sw.js"), hdl.serveFile)
+		r.Get(jp("/manifest.json"), hdl.serveFile)
+		r.Get(jp("/js/{filePath}"), hdl.serveJsFile)
+		r.Get(jp("/res/{filePath}"), hdl.serveFile)
+		r.Get(jp("/css/{filePath}"), hdl.serveFile)
+		r.Get(jp("/fonts/{filePath}"), hdl.serveFile)
+	})
 
-	router.GET(jp("/"), hdl.serveIndexPage)
-	router.GET(jp("/login"), hdl.serveLoginPage)
-	router.GET(jp("/bookmark/:id/thumb"), hdl.serveThumbnailImage)
-	router.GET(jp("/bookmark/:id/content"), hdl.serveBookmarkContent)
-	router.GET(jp("/bookmark/:id/archive/*filepath"), hdl.serveBookmarkArchive)
+	r.Get(jp("/login"), hdl.serveLoginPage)
 
-	router.POST(jp("/api/login"), hdl.apiLogin)
-	router.POST(jp("/api/logout"), hdl.apiLogout)
-	router.GET(jp("/api/bookmarks"), hdl.apiGetBookmarks)
-	router.GET(jp("/api/tags"), hdl.apiGetTags)
-	router.PUT(jp("/api/tag"), hdl.apiRenameTag)
-	router.POST(jp("/api/bookmarks"), hdl.apiInsertBookmark)
-	router.DELETE(jp("/api/bookmarks"), hdl.apiDeleteBookmark)
-	router.PUT(jp("/api/bookmarks"), hdl.apiUpdateBookmark)
-	router.PUT(jp("/api/cache"), hdl.apiUpdateCache)
-	router.PUT(jp("/api/bookmarks/tags"), hdl.apiUpdateBookmarkTags)
-	router.POST(jp("/api/bookmarks/ext"), hdl.apiInsertViaExtension)
-	router.DELETE(jp("/api/bookmarks/ext"), hdl.apiDeleteViaExtension)
+	r.Group(func(r chi.Router) {
+		r.Use(hdl.sessionValidateRedirect)
 
-	router.GET(jp("/api/accounts"), hdl.apiGetAccounts)
-	router.PUT(jp("/api/accounts"), hdl.apiUpdateAccount)
-	router.POST(jp("/api/accounts"), hdl.apiInsertAccount)
-	router.DELETE(jp("/api/accounts"), hdl.apiDeleteAccount)
+		r.Get(jp("/"), hdl.serveIndexPage)
+		r.Get(jp("/bookmark/{id}/thumb"), hdl.serveThumbnailImage)
+		r.Get(jp("/bookmark/{id}/content"), hdl.serveBookmarkContent)
+		r.Get(jp("/bookmark/{id}/archive/{filePath}"), hdl.serveBookmarkArchive)
+	})
 
-	// Route for panic
-	router.PanicHandler = func(w http.ResponseWriter, r *http.Request, arg interface{}) {
-		http.Error(w, fmt.Sprint(arg), 500)
-	}
+	r.Route(jp("/api"), func(r chi.Router) {
+		r.Post("/login", hdl.apiLogin)
+		r.Post("/logout", hdl.apiLogout)
+		r.Get("/bookmarks", hdl.apiGetBookmarks)
+		r.Get("/tags", hdl.apiGetTags)
+		r.Put("/tag", hdl.apiRenameTag)
+		r.Post("/bookmarks", hdl.apiInsertBookmark)
+		r.Delete("/bookmarks", hdl.apiDeleteBookmark)
+		r.Put("/bookmarks", hdl.apiUpdateBookmark)
+		r.Put("/cache", hdl.apiUpdateCache)
+		r.Put("/bookmarks/tags", hdl.apiUpdateBookmarkTags)
+		r.Post("/bookmarks/ext", hdl.apiInsertViaExtension)
+		r.Delete("/bookmarks/ext", hdl.apiDeleteViaExtension)
+
+		r.Get("/accounts", hdl.apiGetAccounts)
+		r.Put("/accounts", hdl.apiUpdateAccount)
+		r.Post("/accounts", hdl.apiInsertAccount)
+		r.Delete("/accounts", hdl.apiDeleteAccount)
+
+	})
 
 	// Create server
 	url := fmt.Sprintf("%s:%d", cfg.ServerAddress, cfg.ServerPort)
 	svr := &http.Server{
 		Addr:         url,
-		Handler:      router,
+		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: time.Minute,
 	}

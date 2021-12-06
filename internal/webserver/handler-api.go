@@ -19,12 +19,11 @@ import (
 	"github.com/hulb/shiori/internal/core"
 	"github.com/hulb/shiori/internal/database"
 	"github.com/hulb/shiori/internal/model"
-	"github.com/julienschmidt/httprouter"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // apiLogin is handler for POST /api/login
-func (h *handler) apiLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiLogin(w http.ResponseWriter, r *http.Request) {
 	// Decode request
 	request := struct {
 		Username string `json:"username"`
@@ -114,7 +113,7 @@ func (h *handler) apiLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 // apiLogout is handler for POST /api/logout
-func (h *handler) apiLogout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiLogout(w http.ResponseWriter, r *http.Request) {
 	// Get session ID
 	sessionID := h.getSessionID(r)
 	if sessionID != "" {
@@ -125,7 +124,7 @@ func (h *handler) apiLogout(w http.ResponseWriter, r *http.Request, ps httproute
 }
 
 // apiGetBookmarks is handler for GET /api/bookmarks
-func (h *handler) apiGetBookmarks(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiGetBookmarks(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -198,7 +197,7 @@ func (h *handler) apiGetBookmarks(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 // apiGetTags is handler for GET /api/tags
-func (h *handler) apiGetTags(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiGetTags(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -213,7 +212,7 @@ func (h *handler) apiGetTags(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // apiRenameTag is handler for PUT /api/tag
-func (h *handler) apiRenameTag(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiRenameTag(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -282,7 +281,7 @@ func (h *handler) processBookmark(book model.Bookmark) (model.Bookmark, error) {
 }
 
 // apiInsertBookmark is handler for POST /api/bookmark
-func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -314,7 +313,7 @@ func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps h
 }
 
 // apiDeleteBookmarks is handler for DELETE /api/bookmark
-func (h *handler) apiDeleteBookmark(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiDeleteBookmark(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -342,7 +341,7 @@ func (h *handler) apiDeleteBookmark(w http.ResponseWriter, r *http.Request, ps h
 }
 
 // apiUpdateBookmark is handler for PUT /api/bookmarks
-func (h *handler) apiUpdateBookmark(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiUpdateBookmark(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -417,7 +416,7 @@ func (h *handler) apiUpdateBookmark(w http.ResponseWriter, r *http.Request, ps h
 }
 
 // apiUpdateCache is handler for PUT /api/cache
-func (h *handler) apiUpdateCache(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiUpdateCache(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -534,7 +533,7 @@ func (h *handler) apiUpdateCache(w http.ResponseWriter, r *http.Request, ps http
 }
 
 // apiUpdateBookmarkTags is handler for PUT /api/bookmarks/tags
-func (h *handler) apiUpdateBookmarkTags(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiUpdateBookmarkTags(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -604,7 +603,7 @@ func (h *handler) apiUpdateBookmarkTags(w http.ResponseWriter, r *http.Request, 
 }
 
 // apiGetAccounts is handler for GET /api/accounts
-func (h *handler) apiGetAccounts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiGetAccounts(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -619,7 +618,7 @@ func (h *handler) apiGetAccounts(w http.ResponseWriter, r *http.Request, ps http
 }
 
 // apiInsertAccount is handler for POST /api/accounts
-func (h *handler) apiInsertAccount(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiInsertAccount(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -637,7 +636,7 @@ func (h *handler) apiInsertAccount(w http.ResponseWriter, r *http.Request, ps ht
 }
 
 // apiUpdateAccount is handler for PUT /api/accounts
-func (h *handler) apiUpdateAccount(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiUpdateAccount(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -685,7 +684,7 @@ func (h *handler) apiUpdateAccount(w http.ResponseWriter, r *http.Request, ps ht
 }
 
 // apiDeleteAccount is handler for DELETE /api/accounts
-func (h *handler) apiDeleteAccount(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiDeleteAccount(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
