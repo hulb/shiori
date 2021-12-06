@@ -61,6 +61,15 @@ func (h *handler) apiLogin(w http.ResponseWriter, r *http.Request) {
 			Account model.Account `json:"account"`
 		}{strSessionID, account}
 
+		cookie := http.Cookie{
+			Path:   "/",
+			Name:   "session-id",
+			Value:  strSessionID,
+			MaxAge: int(expTime.Seconds()),
+		}
+
+		http.SetCookie(w, &cookie)
+
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(&loginResult)
 		checkError(err)
