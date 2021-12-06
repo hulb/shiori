@@ -209,7 +209,7 @@ func (h *handler) serveThumbnailImage(w http.ResponseWriter, r *http.Request) {
 func (h *handler) serveBookmarkArchive(w http.ResponseWriter, r *http.Request) {
 	// Get parameter from URL
 	strID := chi.URLParam(r, "id")
-	resourcePath := chi.URLParam(r, "filePath")
+	resourcePath := chi.URLParam(r, "*")
 	resourcePath = strings.TrimPrefix(resourcePath, "/")
 
 	// Get bookmark from database

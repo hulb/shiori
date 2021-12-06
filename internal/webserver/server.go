@@ -73,7 +73,8 @@ func ServeApp(cfg Config) error {
 		r.Get(jp("/"), hdl.serveIndexPage)
 		r.Get(jp("/bookmark/{id}/thumb"), hdl.serveThumbnailImage)
 		r.Get(jp("/bookmark/{id}/content"), hdl.serveBookmarkContent)
-		r.Get(jp("/bookmark/{id}/archive/{filePath}"), hdl.serveBookmarkArchive)
+		r.Get(jp("/bookmark/{id}/archive"), hdl.redirectSlashAppend)
+		r.Get(jp("/bookmark/{id}/archive/*"), hdl.serveBookmarkArchive)
 	})
 
 	r.Route(jp("/api"), func(r chi.Router) {

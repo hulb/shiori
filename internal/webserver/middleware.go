@@ -3,6 +3,7 @@ package webserver
 import (
 	"net/http"
 	"path"
+	"strings"
 )
 
 func (h *handler) sessionValidateRedirect(next http.Handler) http.Handler {
@@ -18,4 +19,8 @@ func (h *handler) sessionValidateRedirect(next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(fn)
+}
+
+func (h *handler) redirectSlashAppend(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, strings.TrimSuffix(r.URL.Path, "/")+"/", http.StatusTemporaryRedirect)
 }
