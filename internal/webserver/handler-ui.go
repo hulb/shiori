@@ -30,7 +30,7 @@ func (h *handler) serveFile(w http.ResponseWriter, r *http.Request) {
 
 // serveJsFile is handler for GET /js/*filepath
 func (h *handler) serveJsFile(w http.ResponseWriter, r *http.Request) {
-	jsFilePath := chi.URLParam(r, "filePath")
+	jsFilePath := chi.URLParam(r, "*")
 	jsFilePath = path.Join("js", jsFilePath)
 	jsDir, jsName := path.Split(jsFilePath)
 
