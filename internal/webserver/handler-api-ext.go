@@ -10,11 +10,10 @@ import (
 
 	"github.com/hulb/shiori/internal/core"
 	"github.com/hulb/shiori/internal/model"
-	"github.com/julienschmidt/httprouter"
 )
 
 // apiInsertViaExtension is handler for POST /api/bookmarks/ext
-func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
@@ -73,7 +72,7 @@ func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request, 
 }
 
 // apiDeleteViaExtension is handler for DELETE /api/bookmark/ext
-func (h *handler) apiDeleteViaExtension(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *handler) apiDeleteViaExtension(w http.ResponseWriter, r *http.Request) {
 	// Make sure session still valid
 	err := h.validateSession(r)
 	checkError(err)
