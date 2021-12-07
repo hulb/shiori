@@ -58,12 +58,22 @@ func (h *handler) serveIndexPage(w http.ResponseWriter, r *http.Request) {
 
 // serveLoginPage is handler for GET /login
 func (h *handler) serveLoginPage(w http.ResponseWriter, r *http.Request) {
-	if developmentMode {
-		h.prepareTemplates()
+	if err := h.validateSession(r); err != nil {
+		if developmentMode {
+			h.prepareTemplates()
+		}
+
+		err := h.templates["login"].Execute(w, h.RootPath)
+		checkError(err)
+		return
 	}
 
-	err := h.templates["login"].Execute(w, h.RootPath)
-	checkError(err)
+	dst := r.URL.Query().Get("dst")
+	if dst == "" {
+		dst = "/"
+	}
+
+	http.Redirect(w, r, dst, http.StatusTemporaryRedirect)
 }
 
 // serveBookmarkContent is handler for GET /bookmark/:id/content
