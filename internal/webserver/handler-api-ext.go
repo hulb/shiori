@@ -14,13 +14,9 @@ import (
 
 // apiInsertViaExtension is handler for POST /api/bookmarks/ext
 func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request) {
-	// Make sure session still valid
-	err := h.validateSession(r)
-	checkError(err)
-
 	// Decode request
 	request := model.Bookmark{}
-	err = json.NewDecoder(r.Body).Decode(&request)
+	err := json.NewDecoder(r.Body).Decode(&request)
 	checkError(err)
 
 	request.CreateArchive = true
@@ -73,13 +69,9 @@ func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request) 
 
 // apiDeleteViaExtension is handler for DELETE /api/bookmark/ext
 func (h *handler) apiDeleteViaExtension(w http.ResponseWriter, r *http.Request) {
-	// Make sure session still valid
-	err := h.validateSession(r)
-	checkError(err)
-
 	// Decode request
 	request := model.Bookmark{}
-	err = json.NewDecoder(r.Body).Decode(&request)
+	err := json.NewDecoder(r.Body).Decode(&request)
 	checkError(err)
 
 	// Check if bookmark already exists.

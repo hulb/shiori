@@ -63,9 +63,9 @@ func ServeApp(cfg Config) error {
 		r.Get(jp("/res/*"), hdl.serveFile)
 		r.Get(jp("/css/*"), hdl.serveFile)
 		r.Get(jp("/fonts/*"), hdl.serveFile)
+		r.Post("/api/login", hdl.apiLogin)
+		r.Get(jp("/login"), hdl.serveLoginPage)
 	})
-
-	r.Get(jp("/login"), hdl.serveLoginPage)
 
 	r.Group(func(r chi.Router) {
 		r.Use(hdl.sessionValidateRedirect)
@@ -75,26 +75,25 @@ func ServeApp(cfg Config) error {
 		r.Get(jp("/bookmark/{id}/content"), hdl.serveBookmarkContent)
 		r.Get(jp("/bookmark/{id}/archive"), hdl.redirectSlashAppend)
 		r.Get(jp("/bookmark/{id}/archive/*"), hdl.serveBookmarkArchive)
-	})
 
-	r.Route(jp("/api"), func(r chi.Router) {
-		r.Post("/login", hdl.apiLogin)
-		r.Post("/logout", hdl.apiLogout)
-		r.Get("/bookmarks", hdl.apiGetBookmarks)
-		r.Get("/tags", hdl.apiGetTags)
-		r.Put("/tag", hdl.apiRenameTag)
-		r.Post("/bookmarks", hdl.apiInsertBookmark)
-		r.Delete("/bookmarks", hdl.apiDeleteBookmark)
-		r.Put("/bookmarks", hdl.apiUpdateBookmark)
-		r.Put("/cache", hdl.apiUpdateCache)
-		r.Put("/bookmarks/tags", hdl.apiUpdateBookmarkTags)
-		r.Post("/bookmarks/ext", hdl.apiInsertViaExtension)
-		r.Delete("/bookmarks/ext", hdl.apiDeleteViaExtension)
+		r.Route("/api", func(r chi.Router) {
+			r.Get("/bookmarks", hdl.apiGetBookmarks)
+			r.Get("/tags", hdl.apiGetTags)
+			r.Put("/tag", hdl.apiRenameTag)
+			r.Post("/bookmarks", hdl.apiInsertBookmark)
+			r.Delete("/bookmarks", hdl.apiDeleteBookmark)
+			r.Put("/bookmarks", hdl.apiUpdateBookmark)
+			r.Put("/cache", hdl.apiUpdateCache)
+			r.Put("/bookmarks/tags", hdl.apiUpdateBookmarkTags)
+			r.Post("/bookmarks/ext", hdl.apiInsertViaExtension)
+			r.Delete("/bookmarks/ext", hdl.apiDeleteViaExtension)
 
-		r.Get("/accounts", hdl.apiGetAccounts)
-		r.Put("/accounts", hdl.apiUpdateAccount)
-		r.Post("/accounts", hdl.apiInsertAccount)
-		r.Delete("/accounts", hdl.apiDeleteAccount)
+			r.Post("/logout", hdl.apiLogout)
+			r.Get("/accounts", hdl.apiGetAccounts)
+			r.Put("/accounts", hdl.apiUpdateAccount)
+			r.Post("/accounts", hdl.apiInsertAccount)
+			r.Delete("/accounts", hdl.apiDeleteAccount)
+		})
 
 	})
 
