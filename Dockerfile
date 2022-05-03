@@ -1,6 +1,6 @@
 # build stage
 FROM golang:alpine AS builder
-RUN apk add --no-cache build-base
+RUN apk add --no-cache build-base git
 WORKDIR /src
 COPY . .
 RUN go build -ldflags "-s -w"
