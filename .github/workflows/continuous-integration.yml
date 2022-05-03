@@ -19,12 +19,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Install golint
-        run: go get golang.org/x/lint/golint
-
-      - name: Lint Go source code
-        run: golint -set_exit_status ./...
-
   test:
     name: Unit tests
     strategy:
