@@ -84,9 +84,11 @@ func (h *handler) serveBookmarkContent(w http.ResponseWriter, r *http.Request) {
 	checkError(err)
 
 	// Get bookmark in database
-	bookmark, exist := h.DB.GetBookmark(id, "")
+	bookmark, exist, err := h.DB.GetBookmark(r.Context(), id, "")
+	checkError(err)
+
 	if !exist {
-		panic(fmt.Errorf("Bookmark not found"))
+		panic(fmt.Errorf("bookmark not found"))
 	}
 
 	// If it's not public, make sure session still valid
@@ -226,9 +228,11 @@ func (h *handler) serveBookmarkArchive(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(strID)
 	checkError(err)
 
-	bookmark, exist := h.DB.GetBookmark(id, "")
+	bookmark, exist, err := h.DB.GetBookmark(r.Context(), id, "")
+	checkError(err)
+
 	if !exist {
-		panic(fmt.Errorf("Bookmark not found"))
+		panic(fmt.Errorf("bookmark not found"))
 	}
 
 	// If it's not public, make sure session still valid

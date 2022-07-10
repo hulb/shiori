@@ -28,7 +28,10 @@ func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Check if bookmark already exists.
-	book, exist := h.DB.GetBookmark(0, request.URL)
+	book, exist, err := h.DB.GetBookmark(r.Context(), 0, request.URL)
+	if err != nil {
+		panic(fmt.Errorf("failed to get bookmark, URL: %v", err))
+	}
 
 	// If it already exists, we need to set ID and tags.
 	if exist {
@@ -46,14 +49,14 @@ func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request) 
 		}
 	} else {
 		book = request
-		book.ID, err = h.DB.CreateNewID("bookmark")
+		book.ID, err = h.DB.CreateNewID(r.Context(), "bookmark")
 		if err != nil {
 			panic(fmt.Errorf("failed to create ID: %v", err))
 		}
 	}
 
 	// Save bookmark to database
-	results, err := h.DB.SaveBookmarks(book)
+	results, err := h.DB.SaveBookmarks(r.Context(), book)
 	if err != nil || len(results) == 0 {
 		panic(fmt.Errorf("failed to save bookmark: %v", err))
 	}
@@ -75,10 +78,12 @@ func (h *handler) apiDeleteViaExtension(w http.ResponseWriter, r *http.Request) 
 	checkError(err)
 
 	// Check if bookmark already exists.
-	book, exist := h.DB.GetBookmark(0, request.URL)
+	book, exist, err := h.DB.GetBookmark(r.Context(), 0, request.URL)
+	checkError(err)
+
 	if exist {
 		// Delete bookmarks
-		err = h.DB.DeleteBookmarks(book.ID)
+		err = h.DB.DeleteBookmarks(r.Context(), book.ID)
 		checkError(err)
 
 		// Delete thumbnail image and archives from local disk

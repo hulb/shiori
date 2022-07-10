@@ -144,7 +144,7 @@ func (h *handler) startProcessWorker(ctx context.Context) {
 			IDs:         []int{id},
 		}
 
-		unprocessedMarks, err := h.DB.GetBookmarks(searchOptions)
+		unprocessedMarks, err := h.DB.GetBookmarks(ctx, searchOptions)
 		if err != nil {
 			logrus.Error("failed to fetch tasks from db: ", err.Error())
 		}
@@ -156,7 +156,7 @@ func (h *handler) startProcessWorker(ctx context.Context) {
 			}
 
 			mark.Processed = true
-			_, err = h.DB.SaveBookmarks(mark)
+			_, err = h.DB.SaveBookmarks(ctx, mark)
 			if err != nil {
 				logrus.Errorf("failed to save task: %v", err)
 			}
